@@ -1,0 +1,128 @@
+import { ArticleLayout } from '@/components/ArticleLayout'
+
+export const meta = {
+  author: 'Levi Patzwaldt',
+  date: '2022-09-22',
+  title: 'Setting up a Next.js project with PlanetScale and Prisma',
+  description:
+    'When you’re building a Fullstack application you will need a database. Prisma provides a simple and flexible way to connect to your database and perform common database operations such as creating, reading, updating, and deleting data inside of your NextJS Code.',
+}
+
+export default (props) => <ArticleLayout meta={meta} {...props} />
+
+## What is PlanetScale?
+
+Planetscale is a technology company that provides a managed database service for running scalable, highly available, and globally distributed databases. Its platform is built on top of the open-source database software, Vitess, and is designed to run on top of Kubernetes. 
+
+Planetscale's managed service simplifies the process of deploying, managing, and scaling distributed databases in the cloud, and is well-suited for applications that require real-time data access and low latency. Its service is built to handle high levels of traffic and provide high availability and fault tolerance.
+
+## What is Prisma?
+
+Prisma is an open-source database toolkit that makes it easy to build high-performance back-ends for modern applications. It provides a simple and flexible way to connect to your database and perform common database operations such as creating, reading, updating, and deleting data.
+
+Prisma works by providing a layer of abstraction over your database. This means that you don't have to worry about writing complex SQL queries or dealing with database-specific syntax.
+
+## Set up a database on PlanetScale
+
+Next, you'll need to set up a database on PlanetScale. If you don't already have a PlanetScale account, you can sign up for a free trial at [PlanetScale](https://www.planetscale.com/).
+
+Once you've signed up and logged in to your account, click on the "Create a database" button in the dashboard. You'll be asked to choose a database type (MySQL or PostgreSQL) and a database name.
+
+After you've chosen your options, click "Create database". This will spin up a new database cluster on PlanetScale, which can take a few minutes.
+
+Once your database is ready, click on the "Connect" button to get the connection details. You'll need these details later when you connect your Prisma schema to the database.
+
+## Setting up Prisma
+
+To get started with Prisma, you'll need to install the Prisma CLI on your development machine. You can do this by running the following command:
+
+```
+npm install -g prisma
+```
+
+Once the CLI is installed, you can use it to initialize a new Prisma project in your Next.js project by running the following command:
+
+```
+prisma init
+```
+
+This creates the prisma directory with a file named schema.prisma. This file will hold your Prisma schema configuration, which includes your data sources (PlanetScale), generators (Prisma Client), and data models.
+
+Open up the **prisma/schema.prisma** file and paste in the following:
+
+```js
+generator client {
+    provider = "prisma-client-js"
+    previewFeatures = ["referentialIntegrity"]
+}
+
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+    referentialIntegrity = "prisma"
+}
+
+model Example {
+    id String @id @default(cuid())
+}
+```
+
+## Connect to PlanetScale
+
+To set the Prisma data source, you will need to modify your environment variables. Go to the root directory of your application and open the **.env** file. Replace its current contents with the following:
+
+```js
+DATABASE_URL='mysql://<PLANETSCALE_DB_URL>'
+```
+
+Now it's time to push your Prisma schema. In a new terminal tab, run the following command:
+
+```js
+npx prisma db push
+```
+
+## Connecting Prisma to your Next.js project
+
+Once you have your Prisma schema pushed to PlanetScale, you'll need to connect it to your Next.js project. You can do this by installing the @prisma/client package, which provides a JavaScript library for interacting with your Prisma server.
+
+To install the **@prisma/client** package, run the following command:
+
+```
+npm install @prisma/client
+```
+
+Next, create a new file in your Next.js project called **prisma.js** and add the following code:
+
+```js
+const { PrismaClient } = require('@prisma/client')
+
+const prisma = new PrismaClient()
+
+module.exports = prisma
+```
+
+This code creates a new PrismaClient instance and exports it for use in your Next.js project.
+
+## Using Prisma in your Next.js project
+
+For example, you can use the **prisma** object to create a new record in your database like this:
+
+```js
+const newUser = await prisma.user.create({
+  data: {
+    name: 'John Smith',
+    email: 'john@example.com',
+  },
+})
+```
+
+You can also use Prisma to query your database and retrieve data. For example, you can fetch all users in your database or update a users name like this:
+
+```js
+const users = await prisma.user.findMany()
+
+const updatedUser = await prisma.user.update({
+  where: { id: 1 },
+  data: { name: 'Jane Smith' },
+})
+```
